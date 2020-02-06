@@ -1,6 +1,6 @@
 import warnings
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pandas as pd
@@ -140,6 +140,36 @@ class TestGaussianCopula(TestCase):
 
         # Check
         assert np.isclose(covariance, expected_covariance).all().all()
+
+    def test__get_covariance_inf(self):
+        """_get_covariance computes the covariance matrix of normalized values."""
+        # Setup
+        copula = GaussianMultivariate()
+        a_distrib = MagicMock()
+        a_distrib.cumulative_distribution.return_value = np.array([0, 1])
+        b_distrib = MagicMock()
+        b_distrib.constant_value = None
+        b_distrib.cumulative_distribution.return_value = np.array([0, 1])
+        copula.distribs['a'] = a_distrib
+        copula.distribs['b'] = b_distrib
+
+        # Run
+        X = pd.DataFrame([
+            {'a': 0, 'b': 1},
+            {'a': 0, 'b': 1},
+        ])
+        covariance = copula._get_covariance(X)
+
+        # Check
+        # Computed as
+        # >>> neg = norm.ppf(EPSILON)
+        # >>> pos = norm.ppf(1 - EPSILON)
+        # >>> pd.DataFrame([[neg, neg], [pos, pos]]).cov()
+        expected = np.array([
+            [53.38705893, 53.38705893],
+            [53.38705893, 53.38705893],
+        ])
+        assert np.isclose(covariance, expected).all().all()
 
     def test_probability_density(self):
         """Probability_density computes probability for the given values."""

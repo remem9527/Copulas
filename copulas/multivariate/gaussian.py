@@ -73,15 +73,12 @@ class GaussianMultivariate(Multivariate):
             # get original distrib's cdf of the column
             cdf = distrib.cumulative_distribution(column)
 
-            if distrib.constant_value is not None:
-                # This is to avoid np.inf in the case the column is constant.
-                cdf = np.ones(column.shape) - EPSILON
+            # Prevent inf or -inf values
+            cdf = cdf.clip(EPSILON, 1 - EPSILON)
 
             # get inverse cdf using standard normal
             result[column_name] = stats.norm.ppf(cdf)
 
-        # remove any rows that have infinite values
-        result = result[~result.isin([np.inf, -np.inf]).any(axis=1)]
         return pd.DataFrame(data=result).cov().values
 
     @check_valid_values
