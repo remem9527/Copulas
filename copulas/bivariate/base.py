@@ -54,7 +54,7 @@ class Bivariate(object):
     theta_interval = []
     invalid_thetas = []
     theta = None
-    tau = None
+    tau = None  # TODO: Why is this an attribute?
 
     @classmethod
     def _get_subclasses(cls):
